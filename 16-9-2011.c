@@ -23,7 +23,6 @@ int main(void)
     char new[100];
     int fd = open("file.txt", O_RDWR|O_CREAT);
     int numVoc = 0;
-    int cont = 0;
 
     FILE *f = fdopen(fd, "rw");
     
@@ -44,33 +43,30 @@ int main(void)
         close(p[1][1]);
 
         while(fgets(buff, sizeof(buff), f) != NULL){ //restituisce null quando finisce il file
-        
+
             if(write(p[0][1], buff, strlen(buff)+1) < 0){
                 err_sys("write err");
             }
 
+            //memset(new, '\0', strlen(new));
             if(read(p[1][0], new, sizeof(new)) < 0){
                 err_sys("read new err");
             }
+            //printf("parola nuova: [%s]\n", new);
 
-            if(write(STDOUT_FILENO, new, strlen(new)+1) < 0){
+
+            if(write(STDOUT_FILENO, new, strlen(new)) < 0){
                 err_sys("Print err");
             }
-            //memset(buff, '\0', strlen(buff));
-            //memset(new, '\0', strlen(new));
         }
         
         if(write(p[0][1], flag, strlen(flag)+1) < 0){
             err_sys("Percent err");
         }
 
-
         if(read(p[1][0], &numVoc, sizeof(int)) < 0){
             err_sys("read numVoc err");
         } 
-
-        printf("%d\n", numVoc);
-
 
         close(p[0][1]);
         close(p[1][0]);
@@ -83,6 +79,11 @@ int main(void)
 
         while (1)
         {
+            int cont = 0;  
+             
+            //memset(new, '\0', sizeof(new));
+            //printf("\nparola nuova: [%s]\n", new);
+            
             if(read(p[0][0], buff, sizeof(buff)) < 0){
                 err_sys("read err");
             }
@@ -90,7 +91,7 @@ int main(void)
             if(strcmp(buff, flag) == 0)
                 break;
             
-        
+
             for(int i = 0; i < strlen(buff); i++){
                 switch (buff[i])
                 {
@@ -108,22 +109,24 @@ int main(void)
                 
                 case 'u': numVoc++;
                     break;
-                
+                case '\n': ;
+                    break;
                 default:
                     new[cont] = buff[i];
                     cont++;
+                    //printf("\nparola nuova: [%s]\n", new);
                 }
-            }
-            new[cont] = '\0';
+            }            
+            new[cont] = '\n';
+            new[cont+1] = '\0';
 
-            if(write(p[1][1], new, strlen(new)+1) < 0){
+
+            if(write(p[1][1], new, strlen(new)+2) < 0){
                 err_sys("write numVoc err");
             }
-
+           
         }
-
-        
-        
+ 
         close(p[0][0]);
 
         if(write(p[1][1], &numVoc, sizeof(int)) < 0){
@@ -138,9 +141,6 @@ int main(void)
     else{
         err_sys("fork err");
     }
-    
-    
-
 
     exit(0);
 }
